@@ -1,0 +1,14 @@
+{
+  "name": "@fusonic/release-tool",
+  "version": "0.0.1",
+  "description": "Validate commits and generate changelogs since the last release.",
+  "main": "index.js",
+  "author": "Fusonic GmbH",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
+    "conventional-changelog-cli": "^2.2.2",
+    "conventional-changelog-conventionalcommits": "^4.6.3"
+  }
+}

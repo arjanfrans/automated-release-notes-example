@@ -1,0 +1,43 @@
+# Lint the merge request title (if it is not prefixed with "draft:" or "wip:")
+release:lint-merge-request:
+    stage: release
+    image: release-tool-image:latest
+    needs: []
+    variables:
+        CHANGELOG_CONFIG: /release-config/config.js
+        LINT_CONFIG: /release-config/commitlint.config.js
+    script:
+        - echo ${CI_MERGE_REQUEST_TITLE} | commitlint -g ${LINT_CONFIG} -p ${CHANGELOG_CONFIG}
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "schedule"
+          when: never
+        - if: '$CI_MERGE_REQUEST_TITLE =~ /^wip:/i || $CI_MERGE_REQUEST_TITLE =~ /^draft:/i'
+          when: never
+        - if: $CI_MERGE_REQUEST_ID
+          when: always
+
+.release-script:
+    stage: release
+    image: release-tool-image:latest
+    needs: []
+    variables:
+        CHANGELOG_CONFIG: /release-config/config.js
+        FORMAT_PRESET: 'default'
+        GIT_FETCH_EXTRA_FLAGS: '--tags -f'
+    before_script:
+        - echo "Configure a before_script to set the RELEASE_VERSION variable.";
+        - exit 1;
+    script:
+        - conventional-changelog --outfile description.md --config ${CHANGELOG_CONFIG}
+        - RELEASE_DATE=${CI_PIPELINE_CREATED_AT}
+        - RELEASE_DATE_SHORT=$(echo "${RELEASE_DATE}" | sed -E 's/(.+)T([0-9]{2}):([0-9]{2}):([0-9]{2}).+/\1 \2:\3/g')
+        - RELEASE_NAME="${RELEASE_VERSION} (${RELEASE_DATE_SHORT})"
+        - echo $RELEASE_NAME
+        - echo $RELEASE_VERSION
+        - echo $RELEASE_DATE
+        - cat description.md
+        - release-cli create --name "$RELEASE_NAME" --description description.md --tag-name "$RELEASE_VERSION" --released-at "$RELEASE_DATE"
+        - rm description.md
+    rules:
+        - when: never
+
